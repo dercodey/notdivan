@@ -7,6 +7,9 @@ using System.Web.Http;
 
 namespace CouchDbReverseProxy.Controllers
 {
+    /// <summary>
+    /// WebAPI controller that facades a subset of the CouchDB API, and forwards accordingly
+    /// </summary>
     public class CouchDbApiController : ApiController
     {
         private static string baseCouchDbApiAddress = "http://localhost:5984";
@@ -17,10 +20,10 @@ namespace CouchDbReverseProxy.Controllers
             };
 
         /// <summary>
-        /// 
+        /// creates the named db
         /// </summary>
-        /// <param name="dbname"></param>
-        /// <returns></returns>
+        /// <param name="dbname">name of the db to create</param>
+        /// <returns>OK if success</returns>
         [Route("{dbname}")]
         [HttpPut]
         public async Task<IHttpActionResult> 
@@ -33,8 +36,8 @@ namespace CouchDbReverseProxy.Controllers
         /// <summary>
         /// get info about the given db
         /// </summary>
-        /// <param name="dbname"></param>
-        /// <returns></returns>
+        /// <param name="dbname">name of db for which info is requested</param>
+        /// <returns>json with various infos about the db</returns>
         [Route("{dbname}")]
         [HttpGet]
         public async Task<IHttpActionResult> 
@@ -44,9 +47,9 @@ namespace CouchDbReverseProxy.Controllers
                 await client.GetAsync(dbname));
 
         /// <summary>
-        /// 
+        /// deletes the given db
         /// </summary>
-        /// <param name="dbname"></param>
+        /// <param name="dbname">name of the db to be deleted</param>
         /// <returns></returns>
         [Route("{dbname}")]
         [HttpDelete]
@@ -57,11 +60,11 @@ namespace CouchDbReverseProxy.Controllers
                 await client.DeleteAsync(dbname));
 
         /// <summary>
-        /// 
+        /// put to create or update an existing document
         /// </summary>
-        /// <param name="dbname"></param>
-        /// <param name="docid"></param>
-        /// <returns></returns>
+        /// <param name="dbname">name of the db to put the doc in</param>
+        /// <param name="docid">guid for the new or existing document</param>
+        /// <returns>id and rev of the new or updated document</returns>
         [Route("{dbname}/{docid}")]
         [HttpPut]
         public async Task<IHttpActionResult> 
@@ -73,11 +76,12 @@ namespace CouchDbReverseProxy.Controllers
                         await Request.Content.ReadAsStringAsync())));
 
         /// <summary>
-        /// 
+        /// retrieves a document
+        /// TODO: handle revision as query parameter
         /// </summary>
-        /// <param name="dbname"></param>
-        /// <param name="docid"></param>
-        /// <returns></returns>
+        /// <param name="dbname">name of the db to hit</param>
+        /// <param name="docid">the document to be retrieved</param>
+        /// <returns>json of the document object</returns>
         [Route("{dbname}/{docid}")]
         [HttpGet]
         public async Task<IHttpActionResult> 
@@ -87,7 +91,9 @@ namespace CouchDbReverseProxy.Controllers
                 await client.GetAsync($"{dbname}/{docid}"));
 
         /// <summary>
-        /// 
+        /// adds an attachment to the doc
+        /// requires a document rev, provided as a query paramter:
+        ///     PUT http://localhost/db/1234-12324-123124-1233/attach?rev=1-1234-12345-1234-12334
         /// </summary>
         /// <param name="dbname"></param>
         /// <param name="docid"></param>
@@ -103,11 +109,7 @@ namespace CouchDbReverseProxy.Controllers
                     CreateStreamContentWithMimeType(
                         await Request.Content.ReadAsStreamAsync())));
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="stream"></param>
-        /// <returns></returns>
+        // helper to provide stream content with default binary mime type
         private static StreamContent
             CreateStreamContentWithMimeType(System.IO.Stream stream)
         {
@@ -118,12 +120,12 @@ namespace CouchDbReverseProxy.Controllers
         }
 
         /// <summary>
-        /// 
+        /// retrieves an attachment for the given db and document
         /// </summary>
-        /// <param name="dbname"></param>
-        /// <param name="docid"></param>
-        /// <param name="attname"></param>
-        /// <returns></returns>
+        /// <param name="dbname">the db from which to fetch the attachement</param>
+        /// <param name="docid">the document id to be retrieved</param>
+        /// <param name="attname">the attachment name</param>
+        /// <returns>content is the attachment</returns>
         [Route("{dbname}/{docid}/{attname}")]
         [HttpGet]
         public async Task<IHttpActionResult> 

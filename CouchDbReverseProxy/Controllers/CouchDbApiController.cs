@@ -12,12 +12,19 @@ namespace CouchDbReverseProxy.Controllers
     /// </summary>
     public class CouchDbApiController : ApiController
     {
-        private static string baseCouchDbApiAddress = "http://localhost:5984";
-        private static HttpClient client = 
-            new HttpClient()
-            {
-                BaseAddress = new Uri(baseCouchDbApiAddress)
-            };
+        // holds the options and default client for calls
+        CouchDbOptions options;
+        HttpClient client;
+
+        /// <summary>
+        /// construct a new controller with the given options
+        /// </summary>
+        /// <param name="initOptions">options to be used</param>
+        public CouchDbApiController(CouchDbOptions initOptions)
+        {
+            options = initOptions;
+            client = options.Client;
+        }
 
         /// <summary>
         /// creates the named db

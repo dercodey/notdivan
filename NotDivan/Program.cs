@@ -48,15 +48,16 @@ namespace NotDivan
 
         private static bool CreateDb()
         {
-            var content = new StringContent(string.Empty);
-            var masterDbCreateResult = Client.PutAsync($"{masterdbname}", content).Result;
+            var masterContent = new StringContent(string.Empty);
+            var masterDbCreateResult = Client.PutAsync($"{masterdbname}", masterContent).Result;
             if (!masterDbCreateResult.IsSuccessStatusCode)
             {
                 Console.WriteLine(masterDbCreateResult.ReasonPhrase);
                 return false;
             }
 
-            var attachmentDbCreateResult = Client.PutAsync($"{attachmentdbname}", content).Result;
+            var attachmentContent = new StringContent(string.Empty);
+            var attachmentDbCreateResult = Client.PutAsync($"{attachmentdbname}", attachmentContent).Result;
             if (!attachmentDbCreateResult.IsSuccessStatusCode)
             {
                 Console.WriteLine(attachmentDbCreateResult.ReasonPhrase);

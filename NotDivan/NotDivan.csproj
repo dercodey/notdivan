@@ -46,6 +46,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AttachmentDocument.cs" />
+    <Compile Include="AttachmentReference.cs" />
+    <Compile Include="CouchDbHelper.cs" />
+    <Compile Include="DbReference.cs" />
+    <Compile Include="MasterDocument.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

@@ -71,7 +71,9 @@ namespace CouchDbReverseProxy.Controllers
         }
 
         /// <summary>
-        /// put to create or update an existing document
+        /// put to create or update an existing document       
+        /// can provide a document rev, provided as a query paramter:
+        ///     PUT http://localhost/db/1234-12324-123124-1233/attach?rev=1-1234-12345-1234-12334
         /// </summary>
         /// <param name="dbname">name of the db to put the doc in</param>
         /// <param name="docid">guid for the new or existing document</param>
@@ -95,7 +97,8 @@ namespace CouchDbReverseProxy.Controllers
 
         /// <summary>
         /// retrieves a document
-        /// TODO: handle revision as query parameter
+        /// can provide a document rev, provided as a query paramter:
+        ///     GET http://localhost/db/1234-12324-123124-1233/attach?rev=1-1234-12345-1234-12334
         /// </summary>
         /// <param name="dbname">name of the db to hit</param>
         /// <param name="docid">the document to be retrieved</param>        
@@ -112,13 +115,11 @@ namespace CouchDbReverseProxy.Controllers
 
         /// <summary>
         /// adds an attachment to the doc
-        /// requires a document rev, provided as a query paramter:
-        ///     PUT http://localhost/db/1234-12324-123124-1233/attach?rev=1-1234-12345-1234-12334
         /// </summary>
-        /// <param name="dbname"></param>
-        /// <param name="docid"></param>
-        /// <param name="attname"></param>
-        /// <returns></returns>
+        /// <param name="dbname">name of database that will contain the attachment document</param>
+        /// <param name="docid">attachment document ID</param>
+        /// <param name="attname">attachment name</param>
+        /// <returns>a reference to the created attachment document</returns>
         [Route("{dbname}/{docid}/{attname}")]
         [HttpPut]
         public async Task<IHttpActionResult> 
@@ -146,6 +147,7 @@ namespace CouchDbReverseProxy.Controllers
 
         /// <summary>
         /// retrieves an attachment for the given db and document
+        /// note that this isn't supporting the rev parameter, as we expect attachments to not be revved once created
         /// </summary>
         /// <param name="dbname">the db from which to fetch the attachement</param>
         /// <param name="docid">the document id to be retrieved</param>

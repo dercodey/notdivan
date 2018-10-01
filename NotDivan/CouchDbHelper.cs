@@ -96,9 +96,10 @@ namespace NotDivan
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public static async Task<MasterDocument> FindDocumentById(string id)
+        public static async Task<MasterDocument> FindDocumentById(string id, string rev = null)
         {
-            var result = await client.GetAsync($"{masterdbname}/{id}");
+            var requestUrl = rev == null ? $"{masterdbname}/{id}" : $"{masterdbname}/{id}?rev={rev}";
+            var result = await client.GetAsync(requestUrl);
             if (!result.IsSuccessStatusCode)
             {
                 Console.WriteLine(result.ReasonPhrase);
@@ -107,7 +108,6 @@ namespace NotDivan
 
             var stringContent = await result.Content.ReadAsStringAsync();
             var doc = JsonConvert.DeserializeObject<MasterDocument>(stringContent);
-            Console.WriteLine($"{doc.DocumentId} {doc.DatabaseName} {doc.Status}");
             return doc;
         }
 

@@ -33,12 +33,14 @@ namespace CouchDbReverseProxy.Controllers
         /// <returns>OK if success</returns>
         [Route("{dbname}")]
         [HttpPut]
-        public async Task<IHttpActionResult> 
-            CreateDb(string dbname) => 
-            
-            ResponseMessage(
-                await client.PutAsync(dbname, 
-                    new StringContent(string.Empty)));
+        public async Task<IHttpActionResult>
+            CreateDb(string dbname)
+        {
+            var emptyContent = new StringContent(string.Empty);
+            var response = await client.PutAsync(dbname, emptyContent);
+            return ResponseMessage(response);
+        }
+
 
         /// <summary>
         /// get info about the given db
@@ -47,11 +49,12 @@ namespace CouchDbReverseProxy.Controllers
         /// <returns>json with various infos about the db</returns>
         [Route("{dbname}")]
         [HttpGet]
-        public async Task<IHttpActionResult> 
-            GetDbInfo(string dbname) =>
-
-            ResponseMessage(
-                await client.GetAsync(dbname));
+        public async Task<IHttpActionResult>
+            GetDbInfo(string dbname)
+        {
+            var response = await client.GetAsync(dbname);
+            return ResponseMessage(response);
+        }
 
         /// <summary>
         /// deletes the given db
@@ -60,42 +63,52 @@ namespace CouchDbReverseProxy.Controllers
         /// <returns></returns>
         [Route("{dbname}")]
         [HttpDelete]
-        public async Task<IHttpActionResult> 
-            DeleteDb(string dbname) =>
-
-            ResponseMessage(
-                await client.DeleteAsync(dbname));
+        public async Task<IHttpActionResult>
+            DeleteDb(string dbname)
+        {
+            var response = await client.DeleteAsync(dbname);
+            return ResponseMessage(response);
+        }
 
         /// <summary>
         /// put to create or update an existing document
         /// </summary>
         /// <param name="dbname">name of the db to put the doc in</param>
         /// <param name="docid">guid for the new or existing document</param>
+        /// <param name="rev">revision of document, from query parameter (null if none)</param>
         /// <returns>id and rev of the new or updated document</returns>
         [Route("{dbname}/{docid}")]
         [HttpPut]
-        public async Task<IHttpActionResult> 
-            CreateOrUpdateDocument(string dbname, string docid) =>
-
-            ResponseMessage(
-                await client.PutAsync($"{dbname}/{docid}", 
-                    new StringContent(
-                        await Request.Content.ReadAsStringAsync())));
+        public async Task<IHttpActionResult>
+            CreateOrUpdateDocument(string dbname, string docid, string rev = null)
+        {
+            var requestContent = 
+                new StringContent(
+                    await Request.Content.ReadAsStringAsync());
+            string requestUrl = 
+                rev != null ? $"{dbname}/{docid}?rev={rev}" : $"{dbname}/{docid}";
+            var response = 
+                await client.PutAsync(requestUrl,
+                    requestContent);
+            return ResponseMessage(response);
+        }
 
         /// <summary>
         /// retrieves a document
         /// TODO: handle revision as query parameter
         /// </summary>
         /// <param name="dbname">name of the db to hit</param>
-        /// <param name="docid">the document to be retrieved</param>
+        /// <param name="docid">the document to be retrieved</param>        
+        /// <param name="rev">revision of document, from query parameter (null if none)</param>
         /// <returns>json of the document object</returns>
         [Route("{dbname}/{docid}")]
         [HttpGet]
         public async Task<IHttpActionResult> 
-            GetDocument(string dbname, string docid) =>
-
-            ResponseMessage(
-                await client.GetAsync($"{dbname}/{docid}"));
+            GetDocument(string dbname, string docid, string rev = null)
+        {
+            var response = await client.GetAsync($"{dbname}/{docid}");
+            return ResponseMessage(response);
+        }
 
         /// <summary>
         /// adds an attachment to the doc
@@ -109,12 +122,17 @@ namespace CouchDbReverseProxy.Controllers
         [Route("{dbname}/{docid}/{attname}")]
         [HttpPut]
         public async Task<IHttpActionResult> 
-            AddAttachment(string dbname, string docid, string rev, string attname) =>
+            AddAttachment(string dbname, string docid, string attname)
+        {
+            var requestContent =
+                CreateStreamContentWithMimeType(
+                    await Request.Content.ReadAsStreamAsync());
+            var response =
+                await client.PutAsync($"{dbname}/{docid}/{attname}",
+                    requestContent);
+            return ResponseMessage(response);
+        }
 
-            ResponseMessage(
-                await client.PutAsync($"{dbname}/{docid}/{attname}?rev={rev}",
-                    CreateStreamContentWithMimeType(
-                        await Request.Content.ReadAsStreamAsync())));
 
         // helper to provide stream content with default binary mime type
         private static StreamContent
@@ -135,10 +153,11 @@ namespace CouchDbReverseProxy.Controllers
         /// <returns>content is the attachment</returns>
         [Route("{dbname}/{docid}/{attname}")]
         [HttpGet]
-        public async Task<IHttpActionResult> 
-            GetAttachment(string dbname, string docid, string attname) =>
-
-            ResponseMessage(
-                await client.GetAsync($"{dbname}/{docid}/{attname}"));
+        public async Task<IHttpActionResult>
+            GetAttachment(string dbname, string docid, string attname)
+        {
+            var response = await client.GetAsync($"{dbname}/{docid}/{attname}");
+            return ResponseMessage(response);
+        }
     }
 }

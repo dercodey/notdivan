@@ -22,10 +22,14 @@ namespace NotDivan
 
                 var reference =
                     await CouchDbHelper.InsertNewDocument(metadata: @"<xml></xml>");
-                await CouchDbHelper.FindDocumentById(reference.Id);
+                var regetNewDocument =
+                    await CouchDbHelper.FindDocumentById(reference.Id);
 
-                await CouchDbHelper.AddAttachment(reference.Id, reference.RevisionId, "image", new byte[100 * 100]);
-                var attachment = await CouchDbHelper.GetAttachmentForDoc(reference.Id, "image");
+                var attachmentReference =
+                    await CouchDbHelper.AddAttachment(reference.Id, reference.RevisionId, 
+                        "image", new byte[100 * 100]);
+                var regetAttachment = 
+                    await CouchDbHelper.GetAttachmentForDoc(reference.Id, "image");
 
             }).Wait();
 

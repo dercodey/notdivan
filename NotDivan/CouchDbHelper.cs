@@ -137,6 +137,11 @@ namespace NotDivan
 
             // add the attachment reference to the master doc
             var masterDoc = await FindDocumentById(id);
+            if (masterDoc.Attachments == null)
+            {
+                masterDoc.Attachments = new List<AttachmentReference>();
+            }
+
             masterDoc.Attachments.Add(
                 new AttachmentReference()
                 {
@@ -148,7 +153,7 @@ namespace NotDivan
 
             var updatedMasterContent = new StringContent(JsonConvert.SerializeObject(masterDoc));
             var updatedMasterResult = 
-                await client.PutAsync($"{masterdbname}/{id}", updatedMasterContent);
+                await client.PutAsync($"{masterdbname}/{id}?rev={rev}", updatedMasterContent);
             if (!updatedMasterResult.IsSuccessStatusCode)
             {
                 Console.WriteLine(updatedMasterResult.ReasonPhrase);

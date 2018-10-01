@@ -10,7 +10,9 @@ namespace CouchDbReverseProxy
     {
         public void Configuration(IAppBuilder app)
         {
-            var config = WebApiConfig.Register(new HttpConfiguration());
+            var config = new HttpConfiguration();
+            UnityConfig.Register(config);
+            WebApiConfig.Register(config);
             app.UseWebApi(config);
         }
     }

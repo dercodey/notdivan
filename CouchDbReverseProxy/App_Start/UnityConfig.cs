@@ -1,6 +1,7 @@
 using System;
-
+using System.Web.Http;
 using Unity;
+using Unity.AspNet.WebApi;
 
 namespace CouchDbReverseProxy
 {
@@ -9,6 +10,12 @@ namespace CouchDbReverseProxy
     /// </summary>
     public static class UnityConfig
     {
+        public static void Register(HttpConfiguration config)
+        {
+            var resolver = new UnityDependencyResolver(UnityConfig.Container);
+            config.DependencyResolver = resolver;
+        }
+
         #region Unity Container
         private static Lazy<IUnityContainer> container =
           new Lazy<IUnityContainer>(() =>

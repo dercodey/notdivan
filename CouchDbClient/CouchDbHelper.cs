@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using IdentityModel.Client;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -19,26 +20,55 @@ namespace CouchDbClient
         private static readonly string masterDbName;
         private static readonly string attachmentDbName;
 
-        // common client to be used
-        private static readonly HttpClient client;
-
         /// <summary>
         /// static constructor retrieves parameters from appSettings
         /// </summary>
         static CouchDbHelper()
         {
-            baseCouchDbApiAddress = 
-                ConfigurationManager.AppSettings["CouchDbProxyBaseAddress"];
-            masterDbName =
-                ConfigurationManager.AppSettings["MasterDbName"];
-            attachmentDbName =
-                ConfigurationManager.AppSettings["AttachmentDbName"];
+            baseCouchDbApiAddress = ConfigurationManager.AppSettings["CouchDbProxyBaseAddress"];
+            masterDbName = ConfigurationManager.AppSettings["MasterDbName"];
+            attachmentDbName = ConfigurationManager.AppSettings["AttachmentDbName"];
+        }
 
-            client =
-                new HttpClient()
+        /// <summary>
+        /// common client to be used for calls to proxy
+        /// </summary>
+        public static async Task<HttpClient> GetClient()
+        {
+            if (helperClient == null)
+            {
+                helperClient = new HttpClient()
                 {
                     BaseAddress = new Uri(baseCouchDbApiAddress)
                 };
+
+                var response = await RequestTokenAsync();
+                helperClient.SetBearerToken(response.AccessToken);
+            }
+            return helperClient;
+        }
+        private static HttpClient helperClient = null;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        static async Task<TokenResponse> RequestTokenAsync()
+        {
+            var authority = ConfigurationManager.AppSettings["TokenAuthority"];
+            var disco = await DiscoveryClient.GetAsync(authority);
+            if (disco.IsError)
+                throw new Exception(disco.Error);
+
+            var clientId = ConfigurationManager.AppSettings["ClientId"];
+            var clientSecret = ConfigurationManager.AppSettings["ClientSecret"];
+
+            var tokenClient = new TokenClient(disco.TokenEndpoint,
+                clientId,
+                clientSecret);
+
+            var tokenScope = ConfigurationManager.AppSettings["TokenScope"];
+            return await tokenClient.RequestClientCredentialsAsync(tokenScope);
         }
 
         /// <summary>
@@ -47,6 +77,7 @@ namespace CouchDbClient
         /// <returns>true if master exists; false otherwise</returns>
         public static async Task<bool> GetDbInformation()
         {
+            var client = await GetClient();
             var result = await client.GetAsync($"{masterDbName}");
             if (!result.IsSuccessStatusCode)
             {
@@ -67,6 +98,7 @@ namespace CouchDbClient
         {
             // put with empty content
             var masterContent = new StringContent(string.Empty);
+            var client = await GetClient();
             var masterDbCreateResult = await client.PutAsync($"{masterDbName}", masterContent);
             masterDbCreateResult.EnsureSuccessStatusCode();
 
@@ -106,6 +138,7 @@ namespace CouchDbClient
                 rev == null 
                     ? $"{masterDbName}/{id}" 
                     : $"{masterDbName}/{id}?rev={rev}";
+            var client = await GetClient();
             var result = await client.GetAsync(requestUrl);
             result.EnsureSuccessStatusCode();
 
@@ -125,6 +158,7 @@ namespace CouchDbClient
         public static async Task<DbReference> AddAttachment(string id, string rev, string attname, byte[] blob)
         {
             var attachStreamContent = new StreamContent(new System.IO.MemoryStream(blob));
+            var client = await GetClient();
             var attachResult = 
                 await client.PutAsync($"{attachmentDbName}/{id}/{attname}?rev={rev}", 
                     attachStreamContent);
@@ -171,6 +205,7 @@ namespace CouchDbClient
                 masterDoc.Attachments
                     .Where(att => att.Name.CompareTo(attname) == 0)
                     .First();
+            var client = await GetClient();
             var getAttachmentResult = 
                 await client.GetAsync($"{attachmentDbName}/{foundAtt.AttachmentId}/{attname}");
             getAttachmentResult.EnsureSuccessStatusCode();
@@ -198,6 +233,7 @@ namespace CouchDbClient
             var content = new StringContent(jsonString, Encoding.UTF8, @"application/json");
             var docid = Guid.NewGuid().ToString("D");
 
+            var client = await GetClient();
             var result = await client.PutAsync($"{masterDbName}/{docid}", content);
             result.EnsureSuccessStatusCode();
 

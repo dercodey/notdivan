@@ -1,5 +1,7 @@
 ﻿using System;
+using System.IO;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading.Tasks;
 
 namespace CouchDbReverseProxy
@@ -62,6 +64,24 @@ namespace CouchDbReverseProxy
             var content = new StringContent(contentString);
             return await Client.PutAsync(requestUri, content);
         }
-
+  
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="requestUri"></param>
+        /// <param name="contentStream"></param>
+        /// <param name="mediaType"></param>
+        /// <param name="length"></param>
+        /// <returns></returns>
+        public async Task<HttpResponseMessage>
+            PutStreamAsync(Uri requestUri, Stream contentStream,
+                MediaTypeHeaderValue mediaType, long length)
+        {
+            var newContent = new StreamContent(contentStream);
+            newContent.Headers.ContentType = mediaType;
+            newContent.Headers.ContentLength = length;
+            var content = new StreamContent(contentStream);
+            return await Client.PutAsync(requestUri, content);
+        }
     }
 }

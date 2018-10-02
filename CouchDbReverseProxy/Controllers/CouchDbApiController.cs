@@ -14,8 +14,6 @@ namespace CouchDbReverseProxy.Controllers
     {
         // holds the options and default client for calls
         CouchDbService couchService;
-        // TODO: remove this, as calls will use service
-        HttpClient client;
 
         /// <summary>
         /// construct a new controller with the given options
@@ -24,7 +22,6 @@ namespace CouchDbReverseProxy.Controllers
         public CouchDbApiController(CouchDbService useService)
         {
             couchService = useService;
-            client = couchService.Client;
         }
 
         /// <summary>
@@ -37,7 +34,7 @@ namespace CouchDbReverseProxy.Controllers
         public async Task<IHttpActionResult>
             CreateDb(string dbname)
         {
-            var requestUri = new Uri(client.BaseAddress, dbname);
+            var requestUri = new Uri(couchService.Client.BaseAddress, dbname);
             var response =
                 await couchService.PutStringAsync(requestUri, string.Empty);
             return ResponseMessage(response);
@@ -54,7 +51,7 @@ namespace CouchDbReverseProxy.Controllers
         public async Task<IHttpActionResult>
             GetDbInfo(string dbname)
         {
-            var requestUri = new Uri(client.BaseAddress, dbname);
+            var requestUri = new Uri(couchService.Client.BaseAddress, dbname);
             var response = await couchService.GetAsync(requestUri);
             return ResponseMessage(response);
         }
@@ -70,7 +67,7 @@ namespace CouchDbReverseProxy.Controllers
             DeleteDb(string dbname)
         {
             // TODO: use couchService
-            var response = await client.DeleteAsync(dbname);
+            var response = await couchService.Client.DeleteAsync(dbname);
             return ResponseMessage(response);
         }
 
@@ -130,29 +127,13 @@ namespace CouchDbReverseProxy.Controllers
         public async Task<IHttpActionResult> 
             AddAttachment(string dbname, string docid, string attname)
         {
-            var requestContent =
-                CreateStreamContentWithHeaders(
-                    await Request.Content.ReadAsStreamAsync(), 
-                    Request.Content.Headers.ContentType, 
-                    Request.Content.Headers.ContentLength.Value);
-
-            // TODO: use couchService
+            var requestUri = new Uri($"{dbname}/{docid}/{attname}", UriKind.Relative);
             var response =
-                await client.PutAsync($"{dbname}/{docid}/{attname}",
-                    requestContent);
+                await couchService.PutStreamAsync(requestUri,
+                    await Request.Content.ReadAsStreamAsync(),
+                    Request.Content.Headers.ContentType,
+                    Request.Content.Headers.ContentLength.Value);
             return ResponseMessage(response);
-        }
-
-
-        // helper to provide stream content with default binary mime type
-        private static StreamContent
-            CreateStreamContentWithHeaders(System.IO.Stream stream,
-                MediaTypeHeaderValue mediaType, long length)
-        {
-            var newContent = new StreamContent(stream);
-            newContent.Headers.ContentType = mediaType;
-            newContent.Headers.ContentLength = length;
-            return newContent;
         }
 
         /// <summary>
@@ -168,8 +149,8 @@ namespace CouchDbReverseProxy.Controllers
         public async Task<IHttpActionResult>
             GetAttachment(string dbname, string docid, string attname)
         {
-            // TODO: use couchService
-            var response = await client.GetAsync($"{dbname}/{docid}/{attname}");
+            var requestUri = new Uri($"{dbname}/{docid}/{attname}", UriKind.Relative);
+            var response = await couchService.GetAsync(requestUri);
             return ResponseMessage(response);
         }
     }

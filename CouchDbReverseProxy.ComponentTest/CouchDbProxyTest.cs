@@ -41,10 +41,7 @@ namespace CouchDbReverseProxy.ComponentTest
         public void CreateAndGetMasterDocument()
         {
             // create a basic master document with some dummy metadata
-            var randomBytes = new byte[25];
-            random.NextBytes(randomBytes);
-            var randomByteString = string.Join("|", randomBytes.Select(byt => byt.ToString()).ToArray());
-            var initMetadata = $"<xml><metadata value=\"{random.Next(10)}\">{randomByteString}</metadata></xml>";
+            string initMetadata = CreateRandomMetadata();
             var reference =
                 CouchDbHelper.InsertNewDocument(metadata: initMetadata).Result;
             Assert.IsNotNull(reference.Id);
@@ -63,10 +60,7 @@ namespace CouchDbReverseProxy.ComponentTest
         public void CreateAndGetMasterDocumentWithRev()
         {
             // create a basic master document with some dummy metadata
-            var randomBytes = new byte[25];
-            random.NextBytes(randomBytes);
-            var randomByteString = string.Join("|", randomBytes.Select(byt => byt.ToString()).ToArray());
-            var initMetadata = $"<xml><metadata value=\"{random.Next(10)}\">{randomByteString}</metadata></xml>";
+            string initMetadata = CreateRandomMetadata();
             var reference =
                 CouchDbHelper.InsertNewDocument(metadata: initMetadata).Result;
             Assert.IsNotNull(reference.Id);
@@ -80,5 +74,52 @@ namespace CouchDbReverseProxy.ComponentTest
             Assert.AreEqual(reference.RevisionId, regetNewDocumentWithRev.RevisionId);
             Assert.AreEqual(initMetadata, regetNewDocumentWithRev.Metadata);
         }
+
+        [TestMethod]
+        public void CreateAndGetAttachment()
+        {
+            // create a basic master document with some dummy metadata
+            string initMetadata = CreateRandomMetadata();
+            var reference =
+                CouchDbHelper.InsertNewDocument(metadata: initMetadata).Result;
+            Assert.IsNotNull(reference.Id);
+            Assert.IsNotNull(reference.RevisionId);
+
+            // populate a random buffer
+            Random rand = new Random();
+            var buffer = new byte[100 * 100];
+            rand.NextBytes(buffer);
+
+            // attach the buffer to the document
+            var attachmentReference =
+                CouchDbHelper.AddAttachment(reference.Id, reference.RevisionId,
+                    "image", buffer).Result;
+            Assert.IsNotNull(attachmentReference.Id);
+            Assert.IsNotNull(attachmentReference.RevisionId);
+            Console.WriteLine($"Attachment reference: {attachmentReference.Id} {attachmentReference.RevisionId}");
+
+            // reget the attached buffer
+            var regetAttachmentBuffer =
+                CouchDbHelper.GetAttachmentForDoc(reference.Id, "image").Result;
+            Assert.AreEqual(regetAttachmentBuffer.Length, buffer.Length);
+            Console.WriteLine($"Reget attachment length: {regetAttachmentBuffer.Length}");
+
+            // compare reget buffer with original
+            for (int n = 0; n < buffer.Length; n++)
+            {
+                Assert.AreEqual(regetAttachmentBuffer[n], buffer[n]);
+            }
+            Console.WriteLine("Successfully compared reget buffer with original");
+        }
+
+        private static string CreateRandomMetadata()
+        {
+            var randomBytes = new byte[25];
+            random.NextBytes(randomBytes);
+            var randomByteString = string.Join("|", randomBytes.Select(byt => byt.ToString()).ToArray());
+            var initMetadata = $"<xml><metadata value=\"{random.Next(10)}\">{randomByteString}</metadata></xml>";
+            return initMetadata;
+        }
+
     }
 }

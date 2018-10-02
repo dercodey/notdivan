@@ -49,19 +49,11 @@ namespace CouchDbClient
         {
             var masterContent = new StringContent(string.Empty);
             var masterDbCreateResult = await client.PutAsync($"{masterdbname}", masterContent);
-            if (!masterDbCreateResult.IsSuccessStatusCode)
-            {
-                Console.WriteLine(masterDbCreateResult.ReasonPhrase);
-                return false;
-            }
+            masterDbCreateResult.EnsureSuccessStatusCode();
 
             var attachmentContent = new StringContent(string.Empty);
             var attachmentDbCreateResult = await client.PutAsync($"{attachmentdbname}", attachmentContent);
-            if (!attachmentDbCreateResult.IsSuccessStatusCode)
-            {
-                Console.WriteLine(attachmentDbCreateResult.ReasonPhrase);
-                return false;
-            }
+            attachmentDbCreateResult.EnsureSuccessStatusCode();
 
             return true;
         }
@@ -85,11 +77,7 @@ namespace CouchDbClient
             var docid = Guid.NewGuid().ToString("D");
 
             var result = await client.PutAsync($"{masterdbname}/{docid}", content);
-            if (!result.IsSuccessStatusCode)
-            {
-                Console.WriteLine(result.ReasonPhrase);
-                return null;
-            }
+            result.EnsureSuccessStatusCode();
 
             var jsonStringContent = await result.Content.ReadAsStringAsync();
             var referenceToNew = JsonConvert.DeserializeObject<DbReference>(jsonStringContent);
@@ -105,11 +93,7 @@ namespace CouchDbClient
         {
             var requestUrl = rev == null ? $"{masterdbname}/{id}" : $"{masterdbname}/{id}?rev={rev}";
             var result = await client.GetAsync(requestUrl);
-            if (!result.IsSuccessStatusCode)
-            {
-                Console.WriteLine(result.ReasonPhrase);
-                return null;
-            }
+            result.EnsureSuccessStatusCode();
 
             var stringContent = await result.Content.ReadAsStringAsync();
             var doc = JsonConvert.DeserializeObject<MasterDocument>(stringContent);
@@ -130,11 +114,7 @@ namespace CouchDbClient
             var attachResult = 
                 await client.PutAsync($"{attachmentdbname}/{id}/{attname}?rev={rev}", 
                     attachStreamContent);
-            if (!attachResult.IsSuccessStatusCode)
-            {
-                Console.WriteLine(attachResult.ReasonPhrase);
-                return null;
-            }
+            attachResult.EnsureSuccessStatusCode();
 
             var attachmentReference =
                 JsonConvert.DeserializeObject<DbReference>(
@@ -159,11 +139,7 @@ namespace CouchDbClient
             var updatedMasterContent = new StringContent(JsonConvert.SerializeObject(masterDoc));
             var updatedMasterResult = 
                 await client.PutAsync($"{masterdbname}/{id}?rev={rev}", updatedMasterContent);
-            if (!updatedMasterResult.IsSuccessStatusCode)
-            {
-                Console.WriteLine(updatedMasterResult.ReasonPhrase);
-                return null;
-            }
+            updatedMasterResult.EnsureSuccessStatusCode();
 
             return attachmentReference;
         }
@@ -177,15 +153,14 @@ namespace CouchDbClient
         public static async Task<byte[]> GetAttachmentForDoc(string id, string attname)
         {
             var masterDoc = await FindDocumentById(id);
-            var foundAtt = masterDoc.Attachments.Where(att => att.Name.CompareTo(attname) == 0).FirstOrDefault();
-
+            var foundAtt = 
+                masterDoc.Attachments
+                    .Where(att => att.Name.CompareTo(attname) == 0)
+                    .First();
             var getAttachmentResult = 
                 await client.GetAsync($"{attachmentdbname}/{foundAtt.AttachmentId}/{attname}");
-            if (!getAttachmentResult.IsSuccessStatusCode)
-            {
-                Console.WriteLine(getAttachmentResult.ReasonPhrase);
-                return null;
-            }
+            getAttachmentResult.EnsureSuccessStatusCode();
+
 
             var stream = 
                 await getAttachmentResult.Content.ReadAsStreamAsync();

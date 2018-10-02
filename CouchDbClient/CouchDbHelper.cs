@@ -6,15 +6,20 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace NotDivan
+namespace CouchDbClient
 {
     /// <summary>
     /// 
     /// </summary>
     public static class CouchDbHelper
     {
-        private static string baseCouchDbApiAddress = "http://localhost:55464"; // "http://localhost:5984";
-        private static HttpClient client = new HttpClient() { BaseAddress = new Uri(baseCouchDbApiAddress) };
+#if USE_DIRECT_COUCHDB
+        private static string baseCouchDbApiAddress = "http://localhost:5984";
+#else
+        private static string baseCouchDbApiAddress = "http://localhost:55464";
+#endif
+        private static HttpClient client =
+            new HttpClient() { BaseAddress = new Uri(baseCouchDbApiAddress) };
 
         private static string masterdbname = "blobstoragemaster";
         private static string attachmentdbname = "blobstorageattachnmennts";

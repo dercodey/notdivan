@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace NotDivan
+namespace CouchDbClient
 {
     /// <summary>
     /// raw CouchDB reference with revision

@@ -1,4 +1,4 @@
-﻿namespace NotDivan
+﻿namespace CouchDbClient
 {
     /// <summary>
     /// represents an attachment to a master document

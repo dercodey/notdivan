@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System.Collections.Generic;
 
-namespace NotDivan
+namespace CouchDbClient
 {
     /// <summary>
     /// represents a master document in CouchDB

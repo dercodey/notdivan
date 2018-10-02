@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace NotDivan
+namespace CouchDbClient
 {
     /// <summary>
     /// a document representing an attachment to a master document

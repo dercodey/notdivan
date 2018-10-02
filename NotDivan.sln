@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CouchDbClient", "CouchDbCli
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CouchDbReverseProxy.ComponentTest", "CouchDbReverseProxy.ComponentTest\CouchDbReverseProxy.ComponentTest.csproj", "{AD2842C6-0CB4-4CAB-B302-01CB5613F63F}"
 EndProject
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "GiraffeCouchDbProxy", "GiraffeCouchDbProxy\GiraffeCouchDbProxy.fsproj", "{73E1F847-CB6F-43B4-9D7F-9927AA3CB686}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{AD2842C6-0CB4-4CAB-B302-01CB5613F63F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AD2842C6-0CB4-4CAB-B302-01CB5613F63F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AD2842C6-0CB4-4CAB-B302-01CB5613F63F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{73E1F847-CB6F-43B4-9D7F-9927AA3CB686}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{73E1F847-CB6F-43B4-9D7F-9927AA3CB686}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{73E1F847-CB6F-43B4-9D7F-9927AA3CB686}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{73E1F847-CB6F-43B4-9D7F-9927AA3CB686}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

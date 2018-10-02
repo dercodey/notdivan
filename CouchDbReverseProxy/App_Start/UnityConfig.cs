@@ -47,8 +47,8 @@ namespace CouchDbReverseProxy
             // Make sure to add a Unity.Configuration to the using statements.
             // container.LoadConfiguration();
 
-            var options = new CouchDbOptions("http://localhost:5984");
-            container.RegisterInstance<CouchDbOptions>(options);
+            var options = new CouchDbService(new Uri("http://localhost:5984"));
+            container.RegisterInstance<CouchDbService>(options);
         }
     }
 }

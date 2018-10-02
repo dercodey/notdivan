@@ -13,17 +13,17 @@ namespace CouchDbReverseProxy.Controllers
     public class CouchDbApiController : ApiController
     {
         // holds the options and default client for calls
-        CouchDbOptions options;
+        CouchDbService couchService;
         HttpClient client;
 
         /// <summary>
         /// construct a new controller with the given options
         /// </summary>
         /// <param name="initOptions">options to be used</param>
-        public CouchDbApiController(CouchDbOptions initOptions)
+        public CouchDbApiController(CouchDbService useService)
         {
-            options = initOptions;
-            client = options.Client;
+            couchService = useService;
+            client = couchService.Client;
         }
 
         /// <summary>
@@ -36,8 +36,9 @@ namespace CouchDbReverseProxy.Controllers
         public async Task<IHttpActionResult>
             CreateDb(string dbname)
         {
-            var emptyContent = new StringContent(string.Empty);
-            var response = await client.PutAsync(dbname, emptyContent);
+            var requestUri = new Uri(client.BaseAddress, dbname);
+            var response =
+                await couchService.PutStringAsync(requestUri, string.Empty);
             return ResponseMessage(response);
         }
 
@@ -52,7 +53,8 @@ namespace CouchDbReverseProxy.Controllers
         public async Task<IHttpActionResult>
             GetDbInfo(string dbname)
         {
-            var response = await client.GetAsync(dbname);
+            var requestUri = new Uri(client.BaseAddress, dbname);
+            var response = await couchService.GetAsync(requestUri);
             return ResponseMessage(response);
         }
 
@@ -84,14 +86,12 @@ namespace CouchDbReverseProxy.Controllers
         public async Task<IHttpActionResult>
             CreateOrUpdateDocument(string dbname, string docid, string rev = null)
         {
-            var requestContent = 
-                new StringContent(
-                    await Request.Content.ReadAsStringAsync());
-            string requestUrl = 
-                rev != null ? $"{dbname}/{docid}?rev={rev}" : $"{dbname}/{docid}";
+            var requestUri = 
+                couchService.GetDocumentRequestUri(dbname, docid, rev);
+            var documentContent = 
+                await Request.Content.ReadAsStringAsync();
             var response = 
-                await client.PutAsync(requestUrl,
-                    requestContent);
+                await couchService.PutStringAsync(requestUri, documentContent);
             return ResponseMessage(response);
         }
 
@@ -109,7 +109,10 @@ namespace CouchDbReverseProxy.Controllers
         public async Task<IHttpActionResult> 
             GetDocument(string dbname, string docid, string rev = null)
         {
-            var response = await client.GetAsync($"{dbname}/{docid}");
+            var requestUri = 
+                couchService.GetDocumentRequestUri(dbname, docid, rev);
+            var response =
+                await couchService.GetAsync(requestUri);
             return ResponseMessage(response);
         }
 
@@ -126,8 +129,10 @@ namespace CouchDbReverseProxy.Controllers
             AddAttachment(string dbname, string docid, string attname)
         {
             var requestContent =
-                CreateStreamContentWithMimeType(
-                    await Request.Content.ReadAsStreamAsync());
+                CreateStreamContentWithHeaders(
+                    await Request.Content.ReadAsStreamAsync(), 
+                    Request.Content.Headers.ContentType, 
+                    Request.Content.Headers.ContentLength.Value);
             var response =
                 await client.PutAsync($"{dbname}/{docid}/{attname}",
                     requestContent);
@@ -137,11 +142,12 @@ namespace CouchDbReverseProxy.Controllers
 
         // helper to provide stream content with default binary mime type
         private static StreamContent
-            CreateStreamContentWithMimeType(System.IO.Stream stream)
+            CreateStreamContentWithHeaders(System.IO.Stream stream,
+                MediaTypeHeaderValue mediaType, long length)
         {
             var newContent = new StreamContent(stream);
-            newContent.Headers.ContentType = MediaTypeHeaderValue.Parse("application/octet");
-            newContent.Headers.ContentLength = stream.Length;
+            newContent.Headers.ContentType = mediaType;
+            newContent.Headers.ContentLength = length;
             return newContent;
         }
 

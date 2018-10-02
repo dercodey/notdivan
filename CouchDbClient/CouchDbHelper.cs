@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
@@ -9,22 +10,36 @@ using System.Threading.Tasks;
 namespace CouchDbClient
 {
     /// <summary>
-    /// 
+    /// static helper class for access to CouchDb (via proxy)
     /// </summary>
     public static class CouchDbHelper
     {
-#if USE_DIRECT_COUCHDB
-        private static string baseCouchDbApiAddress = "http://localhost:5984";
-#else
-        // TODO: get these from App.config
-        private static string baseCouchDbApiAddress = "http://localhost:55464";
-#endif
-        private static HttpClient client =
-            new HttpClient() { BaseAddress = new Uri(baseCouchDbApiAddress) };
+        // parameters for proxy access
+        private static readonly string baseCouchDbApiAddress;
+        private static readonly string masterDbName;
+        private static readonly string attachmentDbName;
 
-        // TODO: get these from App.config
-        private static string masterdbname = "blobstoragemaster";
-        private static string attachmentdbname = "blobstorageattachnmennts";
+        // common client to be used
+        private static readonly HttpClient client;
+
+        /// <summary>
+        /// static constructor retrieves parameters from appSettings
+        /// </summary>
+        static CouchDbHelper()
+        {
+            baseCouchDbApiAddress = 
+                ConfigurationManager.AppSettings["CouchDbProxyBaseAddress"];
+            masterDbName =
+                ConfigurationManager.AppSettings["MasterDbName"];
+            attachmentDbName =
+                ConfigurationManager.AppSettings["AttachmentDbName"];
+
+            client =
+                new HttpClient()
+                {
+                    BaseAddress = new Uri(baseCouchDbApiAddress)
+                };
+        }
 
         /// <summary>
         /// checks for master db, and prints info
@@ -32,7 +47,7 @@ namespace CouchDbClient
         /// <returns>true if master exists; false otherwise</returns>
         public static async Task<bool> GetDbInformation()
         {
-            var result = await client.GetAsync($"{masterdbname}");
+            var result = await client.GetAsync($"{masterDbName}");
             if (!result.IsSuccessStatusCode)
             {
                 Console.WriteLine(result.ReasonPhrase);
@@ -52,11 +67,11 @@ namespace CouchDbClient
         {
             // put with empty content
             var masterContent = new StringContent(string.Empty);
-            var masterDbCreateResult = await client.PutAsync($"{masterdbname}", masterContent);
+            var masterDbCreateResult = await client.PutAsync($"{masterDbName}", masterContent);
             masterDbCreateResult.EnsureSuccessStatusCode();
 
             var attachmentContent = new StringContent(string.Empty);
-            var attachmentDbCreateResult = await client.PutAsync($"{attachmentdbname}", attachmentContent);
+            var attachmentDbCreateResult = await client.PutAsync($"{attachmentDbName}", attachmentContent);
             attachmentDbCreateResult.EnsureSuccessStatusCode();
 
             return true;
@@ -70,7 +85,7 @@ namespace CouchDbClient
         {
             var doc = new MasterDocument()
             {
-                DatabaseName = masterdbname,
+                DatabaseName = masterDbName,
                 Metadata = metadata,
                 Status = "ACTIVE",
                 StorageSystemType = "CouchDB",
@@ -80,13 +95,17 @@ namespace CouchDbClient
         }
 
         /// <summary>
-        /// 
+        /// retrieves a document by its ID and optional revision
         /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
+        /// <param name="id">the document ID to be retrieved</param>
+        /// <param name="rev">the revision to be retrieved</param>
+        /// <returns>MasterDocument structure</returns>
         public static async Task<MasterDocument> FindDocumentById(string id, string rev = null)
         {
-            var requestUrl = rev == null ? $"{masterdbname}/{id}" : $"{masterdbname}/{id}?rev={rev}";
+            var requestUrl = 
+                rev == null 
+                    ? $"{masterDbName}/{id}" 
+                    : $"{masterDbName}/{id}?rev={rev}";
             var result = await client.GetAsync(requestUrl);
             result.EnsureSuccessStatusCode();
 
@@ -107,7 +126,7 @@ namespace CouchDbClient
         {
             var attachStreamContent = new StreamContent(new System.IO.MemoryStream(blob));
             var attachResult = 
-                await client.PutAsync($"{attachmentdbname}/{id}/{attname}?rev={rev}", 
+                await client.PutAsync($"{attachmentDbName}/{id}/{attname}?rev={rev}", 
                     attachStreamContent);
             attachResult.EnsureSuccessStatusCode();
 
@@ -133,7 +152,7 @@ namespace CouchDbClient
 
             var updatedMasterContent = new StringContent(JsonConvert.SerializeObject(masterDoc));
             var updatedMasterResult = 
-                await client.PutAsync($"{masterdbname}/{id}?rev={rev}", updatedMasterContent);
+                await client.PutAsync($"{masterDbName}/{id}?rev={rev}", updatedMasterContent);
             updatedMasterResult.EnsureSuccessStatusCode();
 
             return attachmentReference;
@@ -153,7 +172,7 @@ namespace CouchDbClient
                     .Where(att => att.Name.CompareTo(attname) == 0)
                     .First();
             var getAttachmentResult = 
-                await client.GetAsync($"{attachmentdbname}/{foundAtt.AttachmentId}/{attname}");
+                await client.GetAsync($"{attachmentDbName}/{foundAtt.AttachmentId}/{attname}");
             getAttachmentResult.EnsureSuccessStatusCode();
 
 
@@ -179,7 +198,7 @@ namespace CouchDbClient
             var content = new StringContent(jsonString, Encoding.UTF8, @"application/json");
             var docid = Guid.NewGuid().ToString("D");
 
-            var result = await client.PutAsync($"{masterdbname}/{docid}", content);
+            var result = await client.PutAsync($"{masterDbName}/{docid}", content);
             result.EnsureSuccessStatusCode();
 
             var jsonStringContent = await result.Content.ReadAsStringAsync();

@@ -1,4 +1,5 @@
 using System;
+using System.Configuration;
 using System.Web.Http;
 using Unity;
 using Unity.AspNet.WebApi;
@@ -47,7 +48,9 @@ namespace CouchDbReverseProxy
             // Make sure to add a Unity.Configuration to the using statements.
             // container.LoadConfiguration();
 
-            var options = new CouchDbService(new Uri("http://localhost:5984"));
+            var couchDbBaseAddress =
+                ConfigurationManager.AppSettings["CouchDbBaseAddress"];
+            var options = new CouchDbService(new Uri(couchDbBaseAddress));
             container.RegisterInstance<CouchDbService>(options);
         }
     }

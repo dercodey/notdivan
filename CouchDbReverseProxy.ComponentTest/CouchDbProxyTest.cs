@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Configuration;
 using System.Linq;
 using CouchDbClient;
 using Microsoft.Owin.Hosting;
@@ -16,7 +17,8 @@ namespace CouchDbReverseProxy.ComponentTest
         public static void Initialize(TestContext ctx)
         {
             // start the web server
-            string baseAddress = "http://localhost:55465/";
+            string baseAddress = 
+                ConfigurationManager.AppSettings["CouchDbProxyBaseAddress"];
 
             // Start OWIN host 
             webAppInstance = WebApp.Start<Startup>(url: baseAddress);

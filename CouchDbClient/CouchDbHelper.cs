@@ -16,18 +16,20 @@ namespace CouchDbClient
 #if USE_DIRECT_COUCHDB
         private static string baseCouchDbApiAddress = "http://localhost:5984";
 #else
+        // TODO: get these from App.config
         private static string baseCouchDbApiAddress = "http://localhost:55464";
 #endif
         private static HttpClient client =
             new HttpClient() { BaseAddress = new Uri(baseCouchDbApiAddress) };
 
+        // TODO: get these from App.config
         private static string masterdbname = "blobstoragemaster";
         private static string attachmentdbname = "blobstorageattachnmennts";
 
         /// <summary>
-        /// 
+        /// checks for master db, and prints info
         /// </summary>
-        /// <returns></returns>
+        /// <returns>true if master exists; false otherwise</returns>
         public static async Task<bool> GetDbInformation()
         {
             var result = await client.GetAsync($"{masterdbname}");
@@ -42,11 +44,13 @@ namespace CouchDbClient
         }
 
         /// <summary>
-        /// 
+        /// creates the two dbs
+        /// assumes they don't exist
         /// </summary>
-        /// <returns></returns>
+        /// <returns>true if the create was successful</returns>
         public static  async Task<bool> CreateDbs()
         {
+            // put with empty content
             var masterContent = new StringContent(string.Empty);
             var masterDbCreateResult = await client.PutAsync($"{masterdbname}", masterContent);
             masterDbCreateResult.EnsureSuccessStatusCode();
@@ -59,9 +63,9 @@ namespace CouchDbClient
         }
 
         /// <summary>
-        /// 
+        /// insert a new document with the given metadata
         /// </summary>
-        /// <returns></returns>
+        /// <returns>document reference with revision</returns>
         public static async Task<DbReference> InsertNewDocument(string metadata)
         {
             var doc = new MasterDocument()
@@ -72,16 +76,7 @@ namespace CouchDbClient
                 StorageSystemType = "CouchDB",
             };
 
-            var jsonString = JsonConvert.SerializeObject(doc);
-            var content = new StringContent(jsonString, Encoding.UTF8, @"application/json");
-            var docid = Guid.NewGuid().ToString("D");
-
-            var result = await client.PutAsync($"{masterdbname}/{docid}", content);
-            result.EnsureSuccessStatusCode();
-
-            var jsonStringContent = await result.Content.ReadAsStringAsync();
-            var referenceToNew = JsonConvert.DeserializeObject<DbReference>(jsonStringContent);
-            return referenceToNew;
+            return await PutJsonAsync<MasterDocument,DbReference>(doc);
         }
 
         /// <summary>
@@ -169,5 +164,28 @@ namespace CouchDbClient
             stream.Read(buffer, 0, (int)length);
             return buffer;
         }
+
+        /// <summary>
+        /// helper that will do a put with a json-serialized object, and returns
+        /// from a json
+        /// </summary>
+        /// <typeparam name="TRequest">input type</typeparam>
+        /// <typeparam name="TResponse">reponse type</typeparam>
+        /// <param name="doc">the input object</param>
+        /// <returns>the response object</returns>
+        private static async Task<TResponse> PutJsonAsync<TRequest, TResponse>(TRequest doc)
+        {
+            var jsonString = JsonConvert.SerializeObject(doc);
+            var content = new StringContent(jsonString, Encoding.UTF8, @"application/json");
+            var docid = Guid.NewGuid().ToString("D");
+
+            var result = await client.PutAsync($"{masterdbname}/{docid}", content);
+            result.EnsureSuccessStatusCode();
+
+            var jsonStringContent = await result.Content.ReadAsStringAsync();
+            var responseObject = JsonConvert.DeserializeObject<TResponse>(jsonStringContent);
+            return responseObject;
+        }
+
     }
 }

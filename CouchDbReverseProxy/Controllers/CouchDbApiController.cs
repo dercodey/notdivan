@@ -14,6 +14,7 @@ namespace CouchDbReverseProxy.Controllers
     {
         // holds the options and default client for calls
         CouchDbService couchService;
+        // TODO: remove this, as calls will use service
         HttpClient client;
 
         /// <summary>
@@ -68,6 +69,7 @@ namespace CouchDbReverseProxy.Controllers
         public async Task<IHttpActionResult>
             DeleteDb(string dbname)
         {
+            // TODO: use couchService
             var response = await client.DeleteAsync(dbname);
             return ResponseMessage(response);
         }
@@ -133,6 +135,8 @@ namespace CouchDbReverseProxy.Controllers
                     await Request.Content.ReadAsStreamAsync(), 
                     Request.Content.Headers.ContentType, 
                     Request.Content.Headers.ContentLength.Value);
+
+            // TODO: use couchService
             var response =
                 await client.PutAsync($"{dbname}/{docid}/{attname}",
                     requestContent);
@@ -164,6 +168,7 @@ namespace CouchDbReverseProxy.Controllers
         public async Task<IHttpActionResult>
             GetAttachment(string dbname, string docid, string attname)
         {
+            // TODO: use couchService
             var response = await client.GetAsync($"{dbname}/{docid}/{attname}");
             return ResponseMessage(response);
         }

@@ -29,6 +29,7 @@ namespace CouchDbReverseProxy.Controllers
         /// </summary>
         /// <param name="dbname">name of the db to create</param>
         /// <returns>OK if success</returns>
+        [Authorize]
         [Route("{dbname}")]
         [HttpPut]
         public async Task<IHttpActionResult>
@@ -46,6 +47,7 @@ namespace CouchDbReverseProxy.Controllers
         /// </summary>
         /// <param name="dbname">name of db for which info is requested</param>
         /// <returns>json with various infos about the db</returns>
+        [Authorize]
         [Route("{dbname}")]
         [HttpGet]
         public async Task<IHttpActionResult>
@@ -61,6 +63,7 @@ namespace CouchDbReverseProxy.Controllers
         /// </summary>
         /// <param name="dbname">name of the db to be deleted</param>
         /// <returns></returns>
+        [Authorize]
         [Route("{dbname}")]
         [HttpDelete]
         public async Task<IHttpActionResult>
@@ -80,6 +83,7 @@ namespace CouchDbReverseProxy.Controllers
         /// <param name="docid">guid for the new or existing document</param>
         /// <param name="rev">revision of document, from query parameter (null if none)</param>
         /// <returns>id and rev of the new or updated document</returns>
+        [Authorize]
         [Route("{dbname}/{docid}")]
         [HttpPut]
         public async Task<IHttpActionResult>
@@ -103,6 +107,7 @@ namespace CouchDbReverseProxy.Controllers
         /// <param name="docid">the document to be retrieved</param>        
         /// <param name="rev">revision of document, from query parameter (null if none)</param>
         /// <returns>json of the document object</returns>
+        [Authorize]
         [Route("{dbname}/{docid}")]
         [HttpGet]
         public async Task<IHttpActionResult> 
@@ -122,6 +127,7 @@ namespace CouchDbReverseProxy.Controllers
         /// <param name="docid">attachment document ID</param>
         /// <param name="attname">attachment name</param>
         /// <returns>a reference to the created attachment document</returns>
+        [Authorize]
         [Route("{dbname}/{docid}/{attname}")]
         [HttpPut]
         public async Task<IHttpActionResult> 
@@ -144,6 +150,7 @@ namespace CouchDbReverseProxy.Controllers
         /// <param name="docid">the document id to be retrieved</param>
         /// <param name="attname">the attachment name</param>
         /// <returns>content is the attachment</returns>
+        [Authorize]
         [Route("{dbname}/{docid}/{attname}")]
         [HttpGet]
         public async Task<IHttpActionResult>

@@ -1,8 +1,10 @@
 ﻿using System.Web.Http;
+using System.Configuration;
 using Microsoft.Owin;
 using Owin;
 using IdentityServer3.AccessTokenValidation;
 using System.IdentityModel.Tokens;
+
 
 [assembly: OwinStartup(typeof(CouchDbReverseProxy.Startup))]
 
@@ -17,7 +19,7 @@ namespace CouchDbReverseProxy
 
             var options = new IdentityServerBearerTokenAuthenticationOptions
             {
-                Authority = "https://localhost:44336/core",
+                Authority = ConfigurationManager.AppSettings["TokenAuthority"],
                 RequiredScopes = new[] { "write" },
 
                 // client credentials for the introspection endpoint

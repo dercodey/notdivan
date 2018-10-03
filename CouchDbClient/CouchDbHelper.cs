@@ -56,14 +56,10 @@ namespace CouchDbClient
         static async Task<TokenResponse> RequestTokenAsync()
         {
             var authority = ConfigurationManager.AppSettings["TokenAuthority"];
-            var disco = await DiscoveryClient.GetAsync(authority);
-            if (disco.IsError)
-                throw new Exception(disco.Error);
-
             var clientId = ConfigurationManager.AppSettings["ClientId"];
             var clientSecret = ConfigurationManager.AppSettings["ClientSecret"];
 
-            var tokenClient = new TokenClient(disco.TokenEndpoint,
+            var tokenClient = new TokenClient($"{authority}/connect/token",
                 clientId,
                 clientSecret);
 

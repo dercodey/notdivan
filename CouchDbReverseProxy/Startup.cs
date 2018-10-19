@@ -30,6 +30,7 @@ namespace CouchDbReverseProxy
 
             var config = new HttpConfiguration();
             UnityConfig.Register(config);
+            SwaggerConfig.Register(config);
             WebApiConfig.Register(config);
             app.UseWebApi(config);
         }

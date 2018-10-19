@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Configuration;
+using System.Diagnostics;
 using System.Linq;
 using CouchDbClient;
 using Microsoft.Owin.Hosting;
@@ -12,12 +13,16 @@ namespace CouchDbReverseProxy.ComponentTest
     {
         static Random random = new Random();
         static IDisposable webAppInstance = null;
+        static Process id3SvrProcess = null;
 
         [ClassInitialize]
         public static void Initialize(TestContext ctx)
         {
+            var id3SvrPath = ConfigurationManager.AppSettings["IdSvr3ConsoleExePath"];
+            id3SvrProcess = Process.Start(id3SvrPath);
+
             // start the web server
-            string baseAddress = 
+            string baseAddress =
                 ConfigurationManager.AppSettings["CouchDbProxyBaseAddress"];
 
             // Start OWIN host 
@@ -37,6 +42,8 @@ namespace CouchDbReverseProxy.ComponentTest
 
             // stop the web host
             webAppInstance.Dispose();
+
+            id3SvrProcess.Kill();
         }
 
         [TestMethod]

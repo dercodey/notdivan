@@ -136,10 +136,16 @@
     <Content Include="Web.config" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="App_Start\AssignOAuth2SecurityRequirements.cs" />
     <Compile Include="App_Start\SwaggerConfig.cs" />
     <Compile Include="App_Start\UnityConfig.cs" />
     <Compile Include="App_Start\WebApiConfig.cs" />
+    <Compile Include="Controllers\BlobStorageController.cs" />
     <Compile Include="Controllers\CouchDbApiController.cs" />
+    <Compile Include="Models\AttachmentDocument.cs" />
+    <Compile Include="Models\AttachmentReference.cs" />
+    <Compile Include="Models\DocumentReference.cs" />
+    <Compile Include="Models\MasterDocument.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\CouchDbService.cs" />
     <Compile Include="Startup.cs" />

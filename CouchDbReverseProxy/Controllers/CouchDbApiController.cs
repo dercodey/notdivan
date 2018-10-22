@@ -1,5 +1,7 @@
-﻿using System;
+﻿using CouchDbReverseProxy.Models;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
@@ -10,6 +12,7 @@ namespace CouchDbReverseProxy.Controllers
     /// <summary>
     /// WebAPI controller that facades a subset of the CouchDB API, and forwards accordingly
     /// </summary>
+    [Route("couch")]
     public class CouchDbApiController : ApiController
     {
         // holds the options and default client for calls
@@ -30,7 +33,7 @@ namespace CouchDbReverseProxy.Controllers
         /// <param name="dbname">name of the db to create</param>
         /// <returns>OK if success</returns>
         [Authorize]
-        [Route("{dbname}")]
+        [Route("couch/{dbname}")]
         [HttpPut]
         public async Task<IHttpActionResult>
             CreateDb(string dbname)
@@ -48,7 +51,7 @@ namespace CouchDbReverseProxy.Controllers
         /// <param name="dbname">name of db for which info is requested</param>
         /// <returns>json with various infos about the db</returns>
         [Authorize]
-        [Route("{dbname}")]
+        [Route("couch/{dbname}")]
         [HttpGet]
         public async Task<IHttpActionResult>
             GetDbInfo(string dbname)
@@ -64,7 +67,7 @@ namespace CouchDbReverseProxy.Controllers
         /// <param name="dbname">name of the db to be deleted</param>
         /// <returns></returns>
         [Authorize]
-        [Route("{dbname}")]
+        [Route("couch/{dbname}")]
         [HttpDelete]
         public async Task<IHttpActionResult>
             DeleteDb(string dbname)
@@ -84,7 +87,7 @@ namespace CouchDbReverseProxy.Controllers
         /// <param name="rev">revision of document, from query parameter (null if none)</param>
         /// <returns>id and rev of the new or updated document</returns>
         [Authorize]
-        [Route("{dbname}/{docid}")]
+        [Route("couch/{dbname}/{docid}")]
         [HttpPut]
         public async Task<IHttpActionResult>
             CreateOrUpdateDocument(string dbname, string docid, string rev = null)
@@ -108,7 +111,7 @@ namespace CouchDbReverseProxy.Controllers
         /// <param name="rev">revision of document, from query parameter (null if none)</param>
         /// <returns>json of the document object</returns>
         [Authorize]
-        [Route("{dbname}/{docid}")]
+        [Route("couch/{dbname}/{docid}")]
         [HttpGet]
         public async Task<IHttpActionResult> 
             GetDocument(string dbname, string docid, string rev = null)
@@ -128,7 +131,7 @@ namespace CouchDbReverseProxy.Controllers
         /// <param name="attname">attachment name</param>
         /// <returns>a reference to the created attachment document</returns>
         [Authorize]
-        [Route("{dbname}/{docid}/{attname}")]
+        [Route("couch/{dbname}/{docid}/{attname}")]
         [HttpPut]
         public async Task<IHttpActionResult> 
             AddAttachment(string dbname, string docid, string attname)
@@ -151,7 +154,7 @@ namespace CouchDbReverseProxy.Controllers
         /// <param name="attname">the attachment name</param>
         /// <returns>content is the attachment</returns>
         [Authorize]
-        [Route("{dbname}/{docid}/{attname}")]
+        [Route("couch/{dbname}/{docid}/{attname}")]
         [HttpGet]
         public async Task<IHttpActionResult>
             GetAttachment(string dbname, string docid, string attname)

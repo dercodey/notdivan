@@ -36,7 +36,7 @@ namespace CouchDbReverseProxy
 
                         // If you want the output Swagger docs to be indented properly, enable the "PrettyPrint" option.
                         //
-                        //c.PrettyPrint();
+                        c.PrettyPrint();
 
                         // If your API has multiple versions, use "MultipleApiVersions" instead of "SingleApiVersion".
                         // In this case, you must provide a lambda that tells Swashbuckle which actions should be
@@ -58,25 +58,25 @@ namespace CouchDbReverseProxy
                         // you'll need to implement a custom IDocumentFilter and/or IOperationFilter to set these properties
                         // according to your specific authorization implementation
                         //
-                        //c.BasicAuth("basic")
-                        //    .Description("Basic HTTP Authentication");
+                        c.BasicAuth("basic")
+                            .Description("Basic HTTP Authentication");
                         //
-						// NOTE: You must also configure 'EnableApiKeySupport' below in the SwaggerUI section
-                        //c.ApiKey("apiKey")
-                        //    .Description("API Key Authentication")
-                        //    .Name("apiKey")
-                        //    .In("header");
-                        //
-                        //c.OAuth2("oauth2")
-                        //    .Description("OAuth2 Implicit Grant")
-                        //    .Flow("implicit")
-                        //    .AuthorizationUrl("http://petstore.swagger.wordnik.com/api/oauth/dialog")
-                        //    //.TokenUrl("https://tempuri.org/token")
-                        //    .Scopes(scopes =>
-                        //    {
-                        //        scopes.Add("read", "Read access to protected resources");
-                        //        scopes.Add("write", "Write access to protected resources");
-                        //    });
+                        // NOTE: You must also configure 'EnableApiKeySupport' below in the SwaggerUI section
+                        c.ApiKey("apiKey")
+                            .Description("API Key Authentication")
+                            .Name("apiKey")
+                            .In("header");
+
+                        c.OAuth2("oauth2")
+                            .Description("OAuth2 Implicit Grant")
+                            .Flow("implicit")
+                            .AuthorizationUrl("http://petstore.swagger.wordnik.com/api/oauth/dialog")
+                            //.TokenUrl("https://tempuri.org/token")
+                            .Scopes(scopes =>
+                            {
+                                scopes.Add("read", "Read access to protected resources");
+                                scopes.Add("write", "Write access to protected resources");
+                            });
 
                         // Set this flag to omit descriptions for any actions decorated with the Obsolete attribute
                         //c.IgnoreObsoleteActions();
@@ -155,8 +155,7 @@ namespace CouchDbReverseProxy
                         // If you've defined an OAuth2 flow as described above, you could use a custom filter
                         // to inspect some attribute on each action and infer which (if any) OAuth2 scopes are required
                         // to execute the operation
-                        //
-                        //c.OperationFilter<AssignOAuth2SecurityRequirements>();
+                        c.OperationFilter<AssignOAuth2SecurityRequirements>();
 
                         // Post-modify the entire Swagger document by wiring up one or more Document filters.
                         // This gives full control to modify the final SwaggerDocument. You should have a good understanding of
@@ -181,8 +180,7 @@ namespace CouchDbReverseProxy
                     {
                         // Use the "DocumentTitle" option to change the Document title.
                         // Very helpful when you have multiple Swagger pages open, to tell them apart.
-                        //
-                        //c.DocumentTitle("My Swagger UI");
+                        c.DocumentTitle("fLUGGERNEW");
 
                         // Use the "InjectStylesheet" option to enrich the UI with one or more additional CSS stylesheets.
                         // The file must be included in your project as an "Embedded Resource", and then the resource's
@@ -236,19 +234,17 @@ namespace CouchDbReverseProxy
 
                         // If your API supports the OAuth2 Implicit flow, and you've described it correctly, according to
                         // the Swagger 2.0 specification, you can enable UI support as shown below.
-                        //
-                        //c.EnableOAuth2Support(
-                        //    clientId: "test-client-id",
-                        //    clientSecret: null,
-                        //    realm: "test-realm",
-                        //    appName: "Swagger UI"
-                        //    //additionalQueryStringParams: new Dictionary<string, string>() { { "foo", "bar" } }
-                        //);
+                        c.EnableOAuth2Support(
+                            clientId: "test-client-id",
+                            clientSecret: null,
+                            realm: "test-realm",
+                            appName: "Swagger UI"
+                        //additionalQueryStringParams: new Dictionary<string, string>() { { "foo", "bar" } }
+                        );
 
                         // If your API supports ApiKey, you can override the default values.
                         // "apiKeyIn" can either be "query" or "header"
-                        //
-                        //c.EnableApiKeySupport("apiKey", "header");
+                        c.EnableApiKeySupport("apiKey", "header");
                     });
         }
     }

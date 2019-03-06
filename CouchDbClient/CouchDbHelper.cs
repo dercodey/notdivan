@@ -50,7 +50,8 @@ namespace CouchDbClient
         private static HttpClient helperClient = null;
 
         /// <summary>
-        /// 
+        /// helper to obtain an access token, based on client ID and secret, from the OpenID
+        /// connect token authority that has been configured
         /// </summary>
         /// <returns></returns>
         static async Task<TokenResponse> RequestTokenAsync()
@@ -144,33 +145,54 @@ namespace CouchDbClient
         }
 
         /// <summary>
-        /// 
+        /// adds a binary attachment to an existing document, by adding a document to the attachment db
+        /// and then inserting a reference from the master db to the attachment db
         /// </summary>
-        /// <param name="id"></param>
-        /// <param name="rev"></param>
-        /// <param name="attname"></param>
-        /// <param name="blob"></param>
+        /// <param name="id">master document ID</param>
+        /// <param name="rev">master document revision</param>
+        /// <param name="attname">name of the attachment</param>
+        /// <param name="blob">byte array representing the blob to be attached</param>
         /// <returns></returns>
         public static async Task<DbReference> AddAttachment(string id, string rev, string attname, byte[] blob)
         {
+            // create stream content for the http request
             var attachStreamContent = new StreamContent(new System.IO.MemoryStream(blob));
+
+            // get / initialize the http client
             var client = await GetClient();
-            var attachResult = 
-                await client.PutAsync($"{attachmentDbName}/{id}/{attname}?rev={rev}", 
+
+            // PUT is used to perform the attachment
+            // note that the master document ID is used as the attachment document ID
+            var attachResult =
+                await client.PutAsync($"{attachmentDbName}/{id}/{attname}?rev={rev}",
                     attachStreamContent);
             attachResult.EnsureSuccessStatusCode();
 
+            // the result that comes back contains a DB reference that can be used to
+            // associate the attachment to the master document
             var attachmentReference =
                 JsonConvert.DeserializeObject<DbReference>(
                     attachResult.Content.ReadAsStringAsync().Result);
 
-            // add the attachment reference to the master doc
+            // fetch the master document
             var masterDoc = await FindDocumentById(id);
             if (masterDoc.Attachments == null)
             {
                 masterDoc.Attachments = new List<AttachmentReference>();
             }
 
+            // see if there is already an attachment with the given name
+            var existingAttachmentReferences =
+                masterDoc.Attachments
+                    .Where(attRef => attRef.Name.CompareTo(attname) == 0)
+                    .ToList();  // turn to a list, so that we don't get a collection changed exception
+            foreach (var existingAttachmentRef in existingAttachmentReferences)
+            {
+                // already an attachment with the given name, so remove it
+                masterDoc.Attachments.Remove(existingAttachmentRef);
+            }
+
+            // add the attachment reference to the master doc
             masterDoc.Attachments.Add(
                 new AttachmentReference()
                 {
@@ -180,35 +202,46 @@ namespace CouchDbClient
                     Size = blob.Length
                 });
 
+            // and update the master document with the new reference
             var updatedMasterContent = new StringContent(JsonConvert.SerializeObject(masterDoc));
             var updatedMasterResult = 
                 await client.PutAsync($"{masterDbName}/{id}?rev={rev}", updatedMasterContent);
             updatedMasterResult.EnsureSuccessStatusCode();
 
+            // return the attachment reference for the successfully attached blob
             return attachmentReference;
         }
 
         /// <summary>
-        /// 
+        /// returns the attachment with given name for a document
         /// </summary>
-        /// <param name="id"></param>
-        /// <param name="attname"></param>
-        /// <returns></returns>
+        /// <param name="id">the ID of the document</param>
+        /// <param name="attname">the attachment name to be retrieved</param>
+        /// <returns>byte array of the blob that has been attached</returns>
         public static async Task<byte[]> GetAttachmentForDoc(string id, string attname)
         {
+            // get the master document
             var masterDoc = await FindDocumentById(id);
+
+            // get the attachment by name
             var foundAtt = 
                 masterDoc.Attachments
                     .Where(att => att.Name.CompareTo(attname) == 0)
                     .First();
+
+            // get/init the client
             var client = await GetClient();
+
+            // GET to retrieve the attachment
             var getAttachmentResult = 
                 await client.GetAsync($"{attachmentDbName}/{foundAtt.AttachmentId}/{attname}");
             getAttachmentResult.EnsureSuccessStatusCode();
 
-
+            // the content is a stream containing the attachment
             var stream = 
                 await getAttachmentResult.Content.ReadAsStreamAsync();
+
+            // read in to an appropriate length buffer
             var length = getAttachmentResult.Content.Headers.ContentLength.Value;
             var buffer = new byte[length];
             stream.Read(buffer, 0, (int)length);
